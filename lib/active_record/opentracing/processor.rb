@@ -21,7 +21,7 @@ module ActiveRecord
             'span.kind' => SPAN_KIND,
             'db.instance' => db_instance,
             'db.cached' => payload.fetch(:cached, false),
-            # 'db.statement' => payload.fetch(:sql).squish,
+            'db.statement' => payload.fetch(:sql).squish,
             'db.type' => DB_TYPE,
             'peer.address' => db_address
           }
