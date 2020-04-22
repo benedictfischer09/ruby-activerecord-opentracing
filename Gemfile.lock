@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    activerecord-opentracing-dox-fork (0.3.0)
+    activerecord-instrumentation (0.3.0)
       activerecord (~> 6.0)
       opentracing (~> 0.5)
 
@@ -84,7 +84,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  activerecord-opentracing-dox-fork!
+  activerecord-instrumentation!
   bundler (~> 1.17)
   dox-style
   opentracing_test_tracer (~> 0.1)
