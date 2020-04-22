@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    activerecord-instrumentation (0.3.0)
+    activerecord-instrumentation (0.3.0.jlauer2)
       activerecord (~> 6.0)
       opentracing (~> 0.5)
 
