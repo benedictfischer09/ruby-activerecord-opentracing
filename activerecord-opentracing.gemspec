@@ -3,14 +3,14 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require 'active_record/opentracing/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = 'activerecord-opentracing'
+  spec.name          = 'activerecord-opentracing-dox-fork'
   spec.version       = ActiveRecord::OpenTracing::VERSION
-  spec.authors       = ['SaleMove TechMovers']
-  spec.email         = ['techmovers@salemove.com']
+  spec.authors       = ['SaleMove TechMovers', "Doximity"]
+  spec.email         = ["ops@doximity.com"]
 
   spec.summary       = 'ActiveRecord OpenTracing intrumenter'
   spec.description   = ''
-  spec.homepage      = 'https://github.com/salemove/ruby-activerecord-opentracing'
+  spec.homepage      = 'https://github.com/doximity/ruby-activerecord-opentracing'
   spec.license       = 'MIT'
 
   # Specify which files should be added to the gem when it is released.
