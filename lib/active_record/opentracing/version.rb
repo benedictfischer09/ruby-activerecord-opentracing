@@ -2,6 +2,6 @@
 
 module ActiveRecord
   module OpenTracing
-    VERSION = '0.2.2.doximity1'.freeze
+    VERSION = '0.3.0'
   end
 end
