@@ -8,7 +8,7 @@ Gem::Specification.new do |spec|
   spec.authors       = ['SaleMove TechMovers', "Doximity"]
   spec.email         = ["ops@doximity.com"]
 
-  spec.summary       = 'ActiveRecord OpenTracing intrumenter'
+  spec.summary       = 'ActiveRecord OpenTracing instrumenter'
   spec.description   = ''
   spec.homepage      = 'https://github.com/doximity/ruby-activerecord-opentracing'
   spec.license       = 'MIT'
@@ -20,7 +20,7 @@ Gem::Specification.new do |spec|
   end
   spec.require_paths = ['lib']
 
-  spec.add_development_dependency 'bundler', '~> 1.17.3'
+  spec.add_development_dependency 'bundler', '~> 1.17'
   spec.add_development_dependency 'opentracing_test_tracer', '~> 0.1'
   spec.add_development_dependency 'rake', '~> 13.0'
   spec.add_development_dependency 'rspec', '~> 3.9.0'

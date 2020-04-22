@@ -72,23 +72,27 @@ module ActiveRecord
         sql
       end
 
-      def has_encodings?(encodings=['UTF-8', 'binary'])
-        encodings.all?{|enc| Encoding.find(enc) rescue false}
+      def has_encodings?(encodings = %w[UTF-8 binary])
+        encodings.all? { |enc| Encoding.find(enc) rescue false }
       end
 
       MAX_SQL_LENGTH = 16384
 
       def scrubbed(str)
-        return '' if !str.is_a?(String) || str.length > MAX_SQL_LENGTH # safeguard - don't sanitize or scrub large SQL statements
-# return str if !str.respond_to?(:encode) # Ruby <= 1.8 doesn't have string encoding
-        return str if str.valid_encoding? # Whatever encoding it is, it is valid and we can operate on it
-# ScoutApm::Agent.instance.context.logger.debug "Scrubbing invalid sql encoding."
-        if str.respond_to?(:scrub) # Prefer to scrub before we have to convert
+        # safeguard - don't sanitize or scrub large SQL statements
+        return '' if !str.is_a?(String) || str.length > MAX_SQL_LENGTH
+
+        # Whatever encoding it is, it is valid and we can operate on it
+        return str if str.valid_encoding? 
+
+        # Prefer scrub over convert
+        if str.respond_to?(:scrub)
           return str.scrub('_')
         elsif has_encodings?(['UTF-8', 'binary'])
           return str.encode('UTF-8', 'binary', :invalid => :replace, :undef => :replace, :replace => '_')
         end
-# ScoutApm::Agent.instance.context.logger.debug "Unable to scrub invalid sql encoding."
+
+        # Unable to scrub invalid sql encoding, returning empty string
         ''
       end
     end
