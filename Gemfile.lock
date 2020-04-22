@@ -69,6 +69,7 @@ PLATFORMS
 
 DEPENDENCIES
   activerecord-opentracing-dox-fork!
+  bundler (~> 1.17)
   opentracing_test_tracer (~> 0.1)
   rake (~> 13.0)
   rspec (~> 3.9.0)
