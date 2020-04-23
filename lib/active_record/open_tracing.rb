@@ -3,10 +3,10 @@
 require "active_record"
 require "opentracing"
 
-require 'active_record/open_tracing/version'
-require 'active_record/open_tracing/processor'
-require 'active_record/open_tracing/sql_sanitizer'
-require 'active_record/open_tracing/sql_regex'
+require "active_record/open_tracing/version"
+require "active_record/open_tracing/processor"
+require "active_record/open_tracing/sql_sanitizer"
+require "active_record/open_tracing/sql_regex"
 
 module ActiveRecord
   module OpenTracing
