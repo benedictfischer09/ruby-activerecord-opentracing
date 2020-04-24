@@ -1,67 +1,35 @@
 # frozen_string_literal: true
 
+require "active_record/open_tracing/sql_sanitizer/base"
+require "active_record/open_tracing/sql_sanitizer/mysql"
+require "active_record/open_tracing/sql_sanitizer/postgres"
+require "active_record/open_tracing/sql_sanitizer/sql_server"
+require "active_record/open_tracing/sql_sanitizer/sqlite"
+require "active_record/open_tracing/sql_sanitizer/regexes"
+
 module ActiveRecord
   module OpenTracing
-    class SqlSanitizer
-      require "active_record/open_tracing/sql_regex"
-      include ActiveRecord::OpenTracing::SqlRegex
+    module SqlSanitizer
+      KLASSES = {
+        mysql: Mysql,
+        postgres: Postgres,
+        sql_server: SqlServer,
+        sqlite: Sqlite
+      }.freeze
 
-      attr_accessor :database_engine
-
-      def initialize(raw_sql, database_engine: :mysql)
-        @raw_sql = raw_sql
-        @database_engine = database_engine
-      end
-
-      def sql
-        @sql ||= scrubbed(@raw_sql.dup)
-      end
-
-      def to_s
-        raise ArgumentError, "Invalid engine #{database_engine.inspect}" unless SUBSTITUTIONS.key?(database_engine)
-
-        apply_substitutions(sql, SUBSTITUTIONS[database_engine])
-      end
-
-      private
-
-      def apply_substitutions(str, substitutions)
-        substitutions.inject(str.dup) do |memo, (regex, replacement)|
-          if replacement.respond_to?(:call)
-            memo.gsub(regex, &replacement)
-          else
-            memo.gsub(regex, replacement)
-          end
-        end.strip
-      end
-
-      def encodings?(encodings = %w[UTF-8 binary])
-        encodings.all? do |enc|
-          begin
-            Encoding.find(enc)
-          rescue StandardError
-            false
-          end
+      class << self
+        def build_sanitizer(sanitizer_name)
+          sanitizer_klass(sanitizer_name).build
         end
-      end
 
-      MAX_SQL_LENGTH = 16384
+        private
 
-      def scrubbed(str)
-        # safeguard - don't sanitize or scrub large SQL statements
-        return "" if !str.is_a?(String) || str.length > MAX_SQL_LENGTH
+        def sanitizer_klass(sanitizer_name)
+          key = KLASSES.keys.detect do |name|
+            sanitizer_name.to_sym == name
+          end || (raise NameError, "Unknown sanitizer #{sanitizer_name.inspect}")
 
-        # Whatever encoding it is, it is valid and we can operate on it
-        return str if str.valid_encoding?
-
-        # Prefer scrub over convert
-        if str.respond_to?(:scrub)
-          str.scrub("_")
-        elsif encodings?(%w[UTF-8 binary])
-          str.encode("UTF-8", "binary", invalid: :replace, undef: :replace, replace: "_")
-        else
-          # Unable to scrub invalid sql encoding, returning empty string
-          ""
+          KLASSES.fetch(key)
         end
       end
     end

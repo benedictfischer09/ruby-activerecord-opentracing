@@ -8,12 +8,15 @@ module ActiveRecord
       SPAN_KIND = "client"
       DB_TYPE = "sql"
 
-      def initialize(tracer)
+      attr_reader :tracer, :sanitizer
+
+      def initialize(tracer, sanitizer: nil)
         @tracer = tracer
+        @sanitizer = sanitizer
       end
 
       def call(_event_name, start, finish, _id, payload)
-        span = @tracer.start_span(
+        span = tracer.start_span(
           payload[:name] || DEFAULT_OPERATION_NAME,
           start_time: start,
           tags: tags_for_payload(payload)
@@ -45,10 +48,14 @@ module ActiveRecord
           "span.kind" => SPAN_KIND,
           "db.instance" => db_instance,
           "db.cached" => payload.fetch(:cached, false),
-          "db.statement" => payload.fetch(:sql).squish,
+          "db.statement" => sanitize_sql(payload.fetch(:sql).squish),
           "db.type" => DB_TYPE,
           "peer.address" => db_address
         }
+      end
+
+      def sanitize_sql(sql)
+        sanitizer ? sanitizer.sanitize(sql) : sql
       end
 
       def db_instance
