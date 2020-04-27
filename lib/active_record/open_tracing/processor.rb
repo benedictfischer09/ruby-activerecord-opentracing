@@ -8,11 +8,12 @@ module ActiveRecord
       SPAN_KIND = "client"
       DB_TYPE = "sql"
 
-      attr_reader :tracer, :sanitizer
+      attr_reader :tracer, :sanitizer, :sql_logging
 
-      def initialize(tracer, sanitizer: nil)
+      def initialize(tracer, sanitizer: nil, sql_logging: true)
         @tracer = tracer
         @sanitizer = sanitizer
+        @sql_logging = sql_logging
       end
 
       def call(_event_name, start, finish, _id, payload)
@@ -48,51 +49,34 @@ module ActiveRecord
           "span.kind" => SPAN_KIND,
           "db.instance" => db_instance,
           "db.cached" => payload.fetch(:cached, false),
-          "db.statement" => sanitize_sql(payload.fetch(:sql).squish),
           "db.type" => DB_TYPE,
-          "peer.address" => db_address
-        }
+          "peer.address" => peer_address_tag
+        }.merge(db_statement(payload))
+      end
+
+      def db_statement(payload)
+        sql_logging ? { "db.statement" => sanitize_sql(payload.fetch(:sql).squish) } : {}
       end
 
       def sanitize_sql(sql)
         sanitizer ? sanitizer.sanitize(sql) : sql
       end
 
-      def db_instance
-        @db_instance ||= db_config.fetch(:database)
-      end
-
-      def db_address
-        @db_address ||= [
-          adapter_str,
-          username_str,
-          host_str,
-          database_str
+      def peer_address_tag
+        @peer_address_tag ||= [
+          "#{connection_config.fetch(:adapter)}://",
+          connection_config[:username],
+          connection_config[:host] && "@#{connection_config[:host]}",
+          "/#{db_instance}"
         ].join
       end
 
-      def adapter_str
-        "#{connection_config.fetch(:adapter)}://"
-      end
-
-      def username_str
-        connection_config[:username]
-      end
-
-      def host_str
-        "@#{connection_config[:host]}" if connection_config[:host]
-      end
-
-      def database_str
-        "/#{connection_config.fetch(:database)}"
+      def db_instance
+        @db_instance ||= connection_config.fetch(:database)
       end
 
       def connection_config
-        ActiveRecord::Base.connection_config
-      end
-
-      def db_config
-        @db_config ||= ActiveRecord::Base.connection_config
+        @connection_config ||= ActiveRecord::Base.connection_config
       end
     end
   end
