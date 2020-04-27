@@ -8,12 +8,12 @@ module ActiveRecord
       SPAN_KIND = "client"
       DB_TYPE = "sql"
 
-      attr_reader :tracer, :sanitizer, :sql_logging
+      attr_reader :tracer, :sanitizer, :sql_logging_enabled
 
-      def initialize(tracer, sanitizer: nil, sql_logging: true)
+      def initialize(tracer, sanitizer: nil, sql_logging_enabled: true)
         @tracer = tracer
         @sanitizer = sanitizer
-        @sql_logging = sql_logging
+        @sql_logging_enabled = sql_logging_enabled
       end
 
       def call(_event_name, start, finish, _id, payload)
@@ -55,7 +55,7 @@ module ActiveRecord
       end
 
       def db_statement(payload)
-        sql_logging ? { "db.statement" => sanitize_sql(payload.fetch(:sql).squish) } : {}
+        sql_logging_enabled ? { "db.statement" => sanitize_sql(payload.fetch(:sql).squish) } : {}
       end
 
       def sanitize_sql(sql)

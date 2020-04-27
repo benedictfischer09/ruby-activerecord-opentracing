@@ -16,9 +16,9 @@ module ActiveRecord
     #   :postgres, :sql_server, :sqlite. If no sanitizer is specified, or a falsy value
     #   is passed, sql will not be sanitized.
     # @param sql_logging [Boolean] Whether to log sql statements to the tracer
-    def self.instrument(tracer: ::OpenTracing.global_tracer, sanitizer: nil, sql_logging: true)
+    def self.instrument(tracer: ::OpenTracing.global_tracer, sanitizer: nil, sql_logging_enabled: true)
       sql_sanitizer = sanitizer && SqlSanitizer.build_sanitizer(sanitizer)
-      processor = Processor.new(tracer, sanitizer: sql_sanitizer, sql_logging: sql_logging)
+      processor = Processor.new(tracer, sanitizer: sql_sanitizer, sql_logging_enabled: sql_logging_enabled)
 
       ActiveSupport::Notifications.subscribe("sql.active_record") do |*args|
         processor.call(*args)
