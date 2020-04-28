@@ -2,6 +2,6 @@
 
 module ActiveRecord
   module OpenTracing
-    VERSION = "0.4.0.jlauer2"
+    VERSION = "0.4.0.jlauer3"
   end
 end

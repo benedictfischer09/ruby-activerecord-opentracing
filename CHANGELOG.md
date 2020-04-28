@@ -1,7 +1,7 @@
 Changelog
 =========
 
-## 0.4.0.jlauer2 04/27/2020
+## 0.4.0.jlauer3 04/27/2020
   * Add SQL sanitizers
 
 ## 0.3.0 04/22/2020
