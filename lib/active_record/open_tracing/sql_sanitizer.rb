@@ -19,7 +19,7 @@ module ActiveRecord
 
       class << self
         def build_sanitizer(sanitizer_name)
-          sanitizer_klass(sanitizer_name).build
+          sanitizer_klass(sanitizer_name).new
         end
 
         private
