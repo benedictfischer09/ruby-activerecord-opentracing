@@ -1,6 +1,9 @@
 Changelog
 =========
 
+## 0.6.0.jhemphill1 07/11/2022
+  * Fixed query tagging for empty queries
+
 ## 0.5.2 01/24/2022
   * Fixed query tagging for empty queries
 
