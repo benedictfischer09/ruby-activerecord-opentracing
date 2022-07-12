@@ -79,8 +79,8 @@ module ActiveRecord
           "db.instance" => db_instance,
           "db.cached" => payload.fetch(:cached, false),
           "db.type" => DB_TYPE,
-          "connection" => payload[:connection].inspect,
-          "peer.address" => peer_address_tag(payload.fetch(:connection, false))
+          "peer.mysql_db_name" => mysql_db_name_tag(payload.fetch(:connection, nil)&.raw_connection),
+          "peer.address" => peer_address_tag
         }.merge(db_statement(payload))
       end
 
@@ -105,22 +105,19 @@ module ActiveRecord
         sanitizer ? sanitizer.sanitize(sql) : sql
       end
 
-      def peer_address_tag(connection)
-        unless defined? @peer_address_tag
-          if connection.respond_to? :host # using the postgres/mysql adapter
-            @peer_address_tag = connection.host + "_hotdogs_"
-          else
-            @peer_address_tag = "farts"
-            # [
-            #   "#{connection_config.fetch(:adapter)}://",
-            #   connection_config[:username],
-            #   connection_config[:host] && "@#{connection_config[:host]}",
-            #   "/#{db_instance}"
-            # ].join
-          end
-        end
+      def mysql_db_name_tag(db_connection)
+        return db_connection.host if db_connection.respond_to?(:host)
+        return nil
+      end
 
-        @peer_address_tag
+      def peer_address_tag
+        @peer_address_tag ||=
+          [
+            "#{connection_config.fetch(:adapter)}://",
+            connection_config[:username],
+            connection_config[:host] && "@#{connection_config[:host]}",
+            "/#{db_instance}"
+          ].join
       end
 
       def db_instance

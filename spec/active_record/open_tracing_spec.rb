@@ -23,7 +23,7 @@ RSpec.describe ActiveRecord::OpenTracing do
   end
   # rubocop:enable RSpec/LeakyConstantDeclaration
 
-  xit "records sql select query" do
+  it "records sql select query" do
     User.first # load table schema, etc
     described_class.instrument(tracer: tracer)
     User.first
@@ -40,11 +40,12 @@ RSpec.describe ActiveRecord::OpenTracing do
       "db.statement" => 'SELECT "users".* FROM "users" ORDER BY "users"."id" ASC LIMIT ?',
       "db.cached" => false,
       "db.type" => "sql",
+      "peer.mysql_db_name" => nil,
       "peer.address" => "sqlite3:///tracer-test"
     )
   end
 
-  xit "uses active span as parent when present" do
+  it "uses active span as parent when present" do
     User.first # load table schema, etc
     described_class.instrument(tracer: tracer)
 
@@ -55,7 +56,7 @@ RSpec.describe ActiveRecord::OpenTracing do
     expect(span.context.parent_id).to eq(parent_span.context.span_id)
   end
 
-  xit "records custom sql query" do
+  it "records custom sql query" do
     User.first # load table schema, etc
     described_class.instrument(tracer: tracer)
     ActiveRecord::Base.connection.execute "SELECT COUNT(1) FROM users"
@@ -72,11 +73,12 @@ RSpec.describe ActiveRecord::OpenTracing do
       "db.statement" => "SELECT COUNT(1) FROM users",
       "db.cached" => false,
       "db.type" => "sql",
+      "peer.mysql_db_name" => nil,
       "peer.address" => "sqlite3:///tracer-test"
     )
   end
 
-  xit "records sql errors" do
+  it "records sql errors" do
     User.first # load table schema, etc
     described_class.instrument(tracer: tracer)
 
@@ -99,6 +101,7 @@ RSpec.describe ActiveRecord::OpenTracing do
       "db.statement" => "SELECT * FROM users WHERE email IS NULL",
       "db.cached" => false,
       "db.type" => "sql",
+      "peer.mysql_db_name" => nil,
       "peer.address" => "sqlite3:///tracer-test",
       "error" => true
     )
@@ -113,7 +116,7 @@ RSpec.describe ActiveRecord::OpenTracing do
     )
   end
 
-  xit "doesn't crash on an empty query" do
+  it "doesn't crash on an empty query" do
     User.first # load table schema, etc
     described_class.instrument(tracer: tracer)
 
@@ -136,6 +139,7 @@ RSpec.describe ActiveRecord::OpenTracing do
       "db.statement" => "",
       "db.cached" => false,
       "db.type" => "sql",
+      "peer.mysql_db_name" => nil,
       "peer.address" => "sqlite3:///tracer-test",
       "error" => true
     )
