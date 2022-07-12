@@ -1,6 +1,9 @@
 Changelog
 =========
 
+## 0.6.0 07/11/2022
+  * Improved pper address tag to reflect the current database when using the mysql adapter
+
 ## 0.5.2 01/24/2022
   * Fixed query tagging for empty queries
 
