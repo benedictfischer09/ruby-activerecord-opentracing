@@ -81,7 +81,6 @@ module ActiveRecord
           "db.instance" => db_instance,
           "db.cached" => payload.fetch(:cached, false),
           "db.type" => DB_TYPE,
-          "peer.mysql_db_name" => mysql_db_name_tag(payload.fetch(:connection, nil)&.raw_connection),
           "peer.address" => peer_address_tag(db_config)
         }.merge(db_statement(payload))
       end
@@ -105,11 +104,6 @@ module ActiveRecord
 
       def sanitize_sql(sql)
         sanitizer ? sanitizer.sanitize(sql) : sql
-      end
-
-      def mysql_db_name_tag(db_connection)
-        return db_connection.host if db_connection.respond_to?(:host)
-        return nil
       end
 
       def peer_address_tag(config)
