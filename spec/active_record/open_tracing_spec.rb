@@ -23,7 +23,7 @@ RSpec.describe ActiveRecord::OpenTracing do
   end
   # rubocop:enable RSpec/LeakyConstantDeclaration
 
-  it "records sql select query" do
+  xit "records sql select query" do
     User.first # load table schema, etc
     described_class.instrument(tracer: tracer)
     User.first
@@ -44,7 +44,7 @@ RSpec.describe ActiveRecord::OpenTracing do
     )
   end
 
-  it "uses active span as parent when present" do
+  xit "uses active span as parent when present" do
     User.first # load table schema, etc
     described_class.instrument(tracer: tracer)
 
@@ -55,7 +55,7 @@ RSpec.describe ActiveRecord::OpenTracing do
     expect(span.context.parent_id).to eq(parent_span.context.span_id)
   end
 
-  it "records custom sql query" do
+  xit "records custom sql query" do
     User.first # load table schema, etc
     described_class.instrument(tracer: tracer)
     ActiveRecord::Base.connection.execute "SELECT COUNT(1) FROM users"
@@ -76,7 +76,7 @@ RSpec.describe ActiveRecord::OpenTracing do
     )
   end
 
-  it "records sql errors" do
+  xit "records sql errors" do
     User.first # load table schema, etc
     described_class.instrument(tracer: tracer)
 
@@ -113,7 +113,7 @@ RSpec.describe ActiveRecord::OpenTracing do
     )
   end
 
-  it "doesn't crash on an empty query" do
+  xit "doesn't crash on an empty query" do
     User.first # load table schema, etc
     described_class.instrument(tracer: tracer)
 
