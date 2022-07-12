@@ -73,6 +73,8 @@ module ActiveRecord
       end
 
       def tags_for_payload(payload)
+        db_config = connection_config(payload[:connection])
+
         {
           "component" => COMPONENT_NAME,
           "span.kind" => SPAN_KIND,
@@ -80,7 +82,7 @@ module ActiveRecord
           "db.cached" => payload.fetch(:cached, false),
           "db.type" => DB_TYPE,
           "peer.mysql_db_name" => mysql_db_name_tag(payload.fetch(:connection, nil)&.raw_connection),
-          "peer.address" => peer_address_tag
+          "peer.address" => peer_address_tag(db_config)
         }.merge(db_statement(payload))
       end
 
@@ -110,24 +112,36 @@ module ActiveRecord
         return nil
       end
 
-      def peer_address_tag
-        @peer_address_tag ||=
-          [
-            "#{connection_config.fetch(:adapter)}://",
-            connection_config[:username],
-            connection_config[:host] && "@#{connection_config[:host]}",
-            "/#{db_instance}"
-          ].join
+      def peer_address_tag(config)
+        @peer_address_tag ||= [
+          "#{config.fetch(:adapter)}://",
+          config[:username],
+          config[:host] && "@#{config[:host]}",
+          "/#{db_instance}"
+        ].join
       end
 
       def db_instance
         @db_instance ||= connection_config.fetch(:database)
       end
 
-      def connection_config
-        # Rails 6.2 will deprecate ActiveRecord::Base.connection_config
-        @connection_config ||=
-          ActiveRecord::Base.try(:connection_db_config)&.configuration_hash || ActiveRecord::Base.connection_config
+      # If a connection is passed in, pull the db config options hash from it.  This connection
+      # is likely to be attached to the query/query client.  Fall back to the application level
+      # config.  This change will show writer vs reader/replica dbs in spans when it is determined
+      # at the query level.
+      def connection_config(connection = nil)
+        unless defined? @connection_config
+          if connection.raw_connection && connection.raw_connection.respond_to?(:query_options)
+            # you have a mysql client
+            @connection_config = connection.raw_connection.query_options
+          else
+            # Rails 6.2 will deprecate ActiveRecord::Base.connection_config
+            @connection_config = ActiveRecord::Base.try(:connection_db_config)&.configuration_hash ||
+                                  ActiveRecord::Base.connection_config
+          end
+        end
+
+        @connection_config
       end
     end
   end

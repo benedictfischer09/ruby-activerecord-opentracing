@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    activerecord-instrumentation (0.6.0.jhemphill3)
+    activerecord-instrumentation (0.6.0.jhemphill4)
       activerecord
       opentracing (~> 0.5)
 
