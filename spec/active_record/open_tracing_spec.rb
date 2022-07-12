@@ -40,7 +40,6 @@ RSpec.describe ActiveRecord::OpenTracing do
       "db.statement" => 'SELECT "users".* FROM "users" ORDER BY "users"."id" ASC LIMIT ?',
       "db.cached" => false,
       "db.type" => "sql",
-      "peer.mysql_db_name" => nil,
       "peer.address" => "sqlite3:///tracer-test"
     )
   end
@@ -73,7 +72,6 @@ RSpec.describe ActiveRecord::OpenTracing do
       "db.statement" => "SELECT COUNT(1) FROM users",
       "db.cached" => false,
       "db.type" => "sql",
-      "peer.mysql_db_name" => nil,
       "peer.address" => "sqlite3:///tracer-test"
     )
   end
@@ -101,7 +99,6 @@ RSpec.describe ActiveRecord::OpenTracing do
       "db.statement" => "SELECT * FROM users WHERE email IS NULL",
       "db.cached" => false,
       "db.type" => "sql",
-      "peer.mysql_db_name" => nil,
       "peer.address" => "sqlite3:///tracer-test",
       "error" => true
     )
@@ -139,7 +136,6 @@ RSpec.describe ActiveRecord::OpenTracing do
       "db.statement" => "",
       "db.cached" => false,
       "db.type" => "sql",
-      "peer.mysql_db_name" => nil,
       "peer.address" => "sqlite3:///tracer-test",
       "error" => true
     )
