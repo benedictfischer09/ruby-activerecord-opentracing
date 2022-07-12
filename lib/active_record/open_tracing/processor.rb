@@ -79,6 +79,7 @@ module ActiveRecord
           "db.instance" => db_instance,
           "db.cached" => payload.fetch(:cached, false),
           "db.type" => DB_TYPE,
+          "connection" => payload[:connection].inspect,
           "peer.address" => peer_address_tag(payload.fetch(:connection, false))
         }.merge(db_statement(payload))
       end
@@ -106,15 +107,16 @@ module ActiveRecord
 
       def peer_address_tag(connection)
         unless defined? @peer_address_tag
-          if connection.respond_to? :host # using the postgres adapter
-            @peer_address_tag = connection.host
+          if connection.respond_to? :host # using the postgres/mysql adapter
+            @peer_address_tag = connection.host + "_hotdogs_"
           else
-            @peer_address_tag = [
-              "#{connection_config.fetch(:adapter)}://",
-              connection_config[:username],
-              connection_config[:host] && "@#{connection_config[:host]}",
-              "/#{db_instance}"
-            ].join
+            @peer_address_tag = "farts"
+            # [
+            #   "#{connection_config.fetch(:adapter)}://",
+            #   connection_config[:username],
+            #   connection_config[:host] && "@#{connection_config[:host]}",
+            #   "/#{db_instance}"
+            # ].join
           end
         end
 
