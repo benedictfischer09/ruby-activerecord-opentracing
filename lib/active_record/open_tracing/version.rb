@@ -2,6 +2,6 @@
 
 module ActiveRecord
   module OpenTracing
-    VERSION = "0.6.0"
+    VERSION = "0.6.1.pre"
   end
 end

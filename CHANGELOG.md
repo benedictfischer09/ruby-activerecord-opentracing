@@ -1,6 +1,9 @@
 Changelog
 =========
 
+## 0.6.1.pre 09/07/2022
+  * Splat hash when passing method expecting keyword args
+
 ## 0.6.0 07/11/2022
   * Improved pper address tag to reflect the current database when using the mysql adapter
 
