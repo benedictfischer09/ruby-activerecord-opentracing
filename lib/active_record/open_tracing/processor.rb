@@ -54,7 +54,7 @@ module ActiveRecord
 
         if (exception = payload[:exception_object])
           span.set_tag("error", true)
-          span.log_kv(exception_metadata(exception))
+          span.log_kv(**exception_metadata(exception))
         end
 
         span.finish(end_time: finish)
