@@ -2,6 +2,7 @@ Changelog
 =========
 
 ## 0.6.1.pre 09/07/2022
+  * Update for ruby 3.x compatibility
   * Splat hash when passing method expecting keyword args
 
 ## 0.6.0 07/11/2022
