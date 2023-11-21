@@ -1,30 +1,42 @@
 PATH
   remote: .
   specs:
-    activerecord-instrumentation (0.6.1)
+    activerecord-instrumentation (0.6.2.pre)
       activerecord
       opentracing (~> 0.5)
 
 GEM
   remote: https://rubygems.org/
   specs:
-    activemodel (7.0.4)
-      activesupport (= 7.0.4)
-    activerecord (7.0.4)
-      activemodel (= 7.0.4)
-      activesupport (= 7.0.4)
-    activesupport (7.0.4)
+    activemodel (7.1.2)
+      activesupport (= 7.1.2)
+    activerecord (7.1.2)
+      activemodel (= 7.1.2)
+      activesupport (= 7.1.2)
+      timeout (>= 0.4.0)
+    activesupport (7.1.2)
+      base64
+      bigdecimal
       concurrent-ruby (~> 1.0, >= 1.0.2)
+      connection_pool (>= 2.2.5)
+      drb
       i18n (>= 1.6, < 2)
       minitest (>= 5.1)
+      mutex_m
       tzinfo (~> 2.0)
     ast (2.4.0)
-    concurrent-ruby (1.1.10)
+    base64 (0.2.0)
+    bigdecimal (3.1.4)
+    concurrent-ruby (1.2.2)
+    connection_pool (2.4.1)
     diff-lcs (1.3)
-    i18n (1.12.0)
+    drb (2.2.0)
+      ruby2_keywords
+    i18n (1.14.1)
       concurrent-ruby (~> 1.0)
     jaro_winkler (1.5.4)
-    minitest (5.16.3)
+    minitest (5.20.0)
+    mutex_m (0.2.0)
     opentracing (0.5.0)
     opentracing_test_tracer (0.1.1)
       opentracing
@@ -59,10 +71,12 @@ GEM
     rubocop-rspec (1.37.1)
       rubocop (>= 0.68.1)
     ruby-progressbar (1.10.1)
+    ruby2_keywords (0.0.5)
     sdoc (1.1.0)
       rdoc (>= 5.0)
     sqlite3 (1.4.2)
-    tzinfo (2.0.5)
+    timeout (0.4.1)
+    tzinfo (2.0.6)
       concurrent-ruby (~> 1.0)
     unicode-display_width (1.6.1)
 
