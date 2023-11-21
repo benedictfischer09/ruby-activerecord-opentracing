@@ -74,6 +74,7 @@ module ActiveRecord
 
       def tags_for_payload(payload)
         db_config = connection_config(payload[:connection])
+        db_instance = db_config.fetch(:database)
 
         {
           "component" => COMPONENT_NAME,
@@ -81,7 +82,8 @@ module ActiveRecord
           "db.instance" => db_instance,
           "db.cached" => payload.fetch(:cached, false),
           "db.type" => DB_TYPE,
-          "peer.address" => peer_address_tag(db_config)
+          "db.role" => db_role_for(payload[:connection]),
+          "peer.address" => peer_address_tag(db_config, db_instance)
         }.merge(db_statement(payload))
       end
 
@@ -106,8 +108,8 @@ module ActiveRecord
         sanitizer ? sanitizer.sanitize(sql) : sql
       end
 
-      def peer_address_tag(config)
-        @peer_address_tag ||= [
+      def peer_address_tag(config, db_instance)
+        [
           "#{config.fetch(:adapter)}://",
           config[:username],
           config[:host] && "@#{config[:host]}",
@@ -115,27 +117,42 @@ module ActiveRecord
         ].join
       end
 
-      def db_instance
-        @db_instance ||= connection_config.fetch(:database)
-      end
-
       # If a connection is passed in, pull the db config options hash from it.  This connection
       # is likely to be attached to the query/query client.  Fall back to the application level
       # config.  This change will show writer vs reader/replica dbs in spans when it is determined
       # at the query level.
       def connection_config(connection = nil)
-        unless defined? @connection_config
-          if connection.raw_connection && connection.raw_connection.respond_to?(:query_options)
-            # you have a mysql client
-            @connection_config = connection.raw_connection.query_options
-          else
-            # Rails 6.2 will deprecate ActiveRecord::Base.connection_config
-            @connection_config = ActiveRecord::Base.try(:connection_db_config)&.configuration_hash ||
-                                  ActiveRecord::Base.connection_config
-          end
+        if connection && connection.raw_connection && connection.raw_connection.respond_to?(:query_options)
+          # you have a mysql client
+          connection.raw_connection.query_options
+        else
+          # Rails 6.2 will deprecate ActiveRecord::Base.connection_config
+          ActiveRecord::Base.try(:connection_db_config)&.configuration_hash ||
+                                ActiveRecord::Base.connection_config
         end
+      end
 
-        @connection_config
+      DB_NAME_TO_ROLE = {
+        "primary" => "writing",
+        "primary_replica" => "reading"
+      }
+
+      # Returns the database role for the current connection. Usually, this will
+      # be either writing or reading (when using reader replicas).
+      #
+      # * connection.role was introduced in Rails 7 so we fallback to reading the db_config name
+      # and translate based on common values.
+      # * connection.role calls connection.pool.role and a NoMethodError is raised when
+      # the connection's pool is a ActiveRecord::ConnectionAdapters::NullPool.
+      def db_role_for(connection)
+        if connection.respond_to?(:role)
+          connection.role.to_s
+        else
+          db_name = connection.pool.pool_config.db_config.name
+          DB_NAME_TO_ROLE.fetch(db_name, "unknown")
+        end
+      rescue NoMethodError
+        "unknown"
       end
     end
   end
