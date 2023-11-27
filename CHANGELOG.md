@@ -1,6 +1,9 @@
 Changelog
 =========
 
+## 0.6.2 11/21/2023
+  * Add db.role tag
+
 ## 0.6.1 09/07/2022
   * Update for ruby 3.x compatibility
   * Splat hash when passing method expecting keyword args

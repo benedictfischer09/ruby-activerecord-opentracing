@@ -1,14 +1,36 @@
 # frozen_string_literal: true
 
 RSpec.describe ActiveRecord::OpenTracing do
-  let(:tracer) { OpenTracingTestTracer.build }
+  # rubocop:disable RSpec/LeakyConstantDeclaration
+  config = {
+    ActiveRecord::ConnectionHandling::DEFAULT_ENV.call => {
+      primary: {
+        adapter: "sqlite3",
+        database: "tracer-test",
+        username: "writer",
+        host: "db-writer"
+      },
+      primary_replica: {
+        adapter: "sqlite3",
+        database: "tracer-test",
+        username: "reader",
+        host: "db-reader"
+      }
+    }
+  }
+  ActiveRecord::Base.configurations = config
+
+  class ApplicationRecord < ActiveRecord::Base
+    self.abstract_class = true
+    connects_to database: { writing: :primary, reading: :primary_replica }
+  end
+
+  class User < ApplicationRecord
+  end
+  # rubocop:enable RSpec/LeakyConstantDeclaration
 
   before do
-    config = {
-      adapter: "sqlite3",
-      database: "tracer-test"
-    }
-    ActiveRecord::Base.establish_connection(config)
+    ActiveRecord::Base.establish_connection
     ActiveRecord::Base.connection.execute "DROP TABLE IF EXISTS users"
     ActiveRecord::Base.connection.execute <<-SQL
       CREATE TABLE IF NOT EXISTS users (
@@ -16,16 +38,14 @@ RSpec.describe ActiveRecord::OpenTracing do
         name text NOT NULL
       );
     SQL
+    User.first  # load table schema, etc
   end
 
-  # rubocop:disable RSpec/LeakyConstantDeclaration
-  class User < ActiveRecord::Base
-  end
-  # rubocop:enable RSpec/LeakyConstantDeclaration
+  let(:tracer) { OpenTracingTestTracer.build }
 
   it "records sql select query" do
-    User.first # load table schema, etc
     described_class.instrument(tracer: tracer)
+
     User.first
 
     expect(tracer.spans.count).to eq(1)
@@ -40,12 +60,12 @@ RSpec.describe ActiveRecord::OpenTracing do
       "db.statement" => 'SELECT "users".* FROM "users" ORDER BY "users"."id" ASC LIMIT ?',
       "db.cached" => false,
       "db.type" => "sql",
-      "peer.address" => "sqlite3:///tracer-test"
+      "db.role" => "writing",
+      "peer.address" => "sqlite3://writer@db-writer/tracer-test"
     )
   end
 
   it "uses active span as parent when present" do
-    User.first # load table schema, etc
     described_class.instrument(tracer: tracer)
 
     parent_span = tracer.start_active_span("parent_span") { User.first }.span
@@ -56,8 +76,8 @@ RSpec.describe ActiveRecord::OpenTracing do
   end
 
   it "records custom sql query" do
-    User.first # load table schema, etc
     described_class.instrument(tracer: tracer)
+
     ActiveRecord::Base.connection.execute "SELECT COUNT(1) FROM users"
 
     expect(tracer.spans.count).to eq(1)
@@ -72,12 +92,12 @@ RSpec.describe ActiveRecord::OpenTracing do
       "db.statement" => "SELECT COUNT(1) FROM users",
       "db.cached" => false,
       "db.type" => "sql",
-      "peer.address" => "sqlite3:///tracer-test"
+      "db.role" => "writing",
+      "peer.address" => "sqlite3://writer@db-writer/tracer-test"
     )
   end
 
   it "records sql errors" do
-    User.first # load table schema, etc
     described_class.instrument(tracer: tracer)
 
     thrown_exception = nil
@@ -99,7 +119,8 @@ RSpec.describe ActiveRecord::OpenTracing do
       "db.statement" => "SELECT * FROM users WHERE email IS NULL",
       "db.cached" => false,
       "db.type" => "sql",
-      "peer.address" => "sqlite3:///tracer-test",
+      "db.role" => "writing",
+      "peer.address" => "sqlite3://writer@db-writer/tracer-test",
       "error" => true
     )
     expect(span.logs).to include(
@@ -114,7 +135,6 @@ RSpec.describe ActiveRecord::OpenTracing do
   end
 
   it "doesn't crash on an empty query" do
-    User.first # load table schema, etc
     described_class.instrument(tracer: tracer)
 
     thrown_exception = nil
@@ -136,7 +156,8 @@ RSpec.describe ActiveRecord::OpenTracing do
       "db.statement" => "",
       "db.cached" => false,
       "db.type" => "sql",
-      "peer.address" => "sqlite3:///tracer-test",
+      "db.role" => "writing",
+      "peer.address" => "sqlite3://writer@db-writer/tracer-test",
       "error" => true
     )
     expect(span.logs).to include(
@@ -148,5 +169,33 @@ RSpec.describe ActiveRecord::OpenTracing do
         stack: thrown_exception.backtrace.join("\n")
       )
     )
+  end
+
+  context "multi db roles support" do
+    it "traces queries on writer db" do
+      ActiveRecord::Base.connected_to(role: :writing) do
+        described_class.instrument(tracer: tracer)
+
+        User.first
+
+        span = tracer.spans.last
+        expect(span.operation_name).to eq("User Load")
+        expect(span.tags["db.role"]).to eq("writing")
+        expect(span.tags["peer.address"]).to eq("sqlite3://writer@db-writer/tracer-test")
+      end
+    end
+
+    it "traces queries on reader replicas" do
+      ActiveRecord::Base.connected_to(role: :reading) do
+        described_class.instrument(tracer: tracer)
+
+        User.first
+
+        span = tracer.spans.last
+        expect(span.operation_name).to eq("User Load")
+        expect(span.tags["db.role"]).to eq("reading")
+        expect(span.tags["peer.address"]).to eq("sqlite3://reader@db-reader/tracer-test")
+      end
+    end
   end
 end
